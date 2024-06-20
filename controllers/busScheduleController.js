@@ -10,11 +10,11 @@ exports.getAvailableBuses = async (req, res) => {
 
   try {
     // Find all bus schedules that contain the provided source and destination in their routes
-    const availableBuses = await BusSchedule.find({
-      $or: [
-        { 'route': source },
-        { 'route': destination }
-      ]
+    const foundBuses = await BusSchedule.find({
+      route: { $in: [source, destination] }
+    }, {
+      VehicleNumber: 1, 
+      schedule: 1,
     });
 
     // Send the list of available buses as the response
@@ -26,27 +26,48 @@ exports.getAvailableBuses = async (req, res) => {
 };
 
 
-// Controller function to receive source and destination data from Flutter app
 exports.searchBuses = async (req, res) => {
   // Extract source and destination from the request body
   const { source, destination } = req.body;
 
   try {
     // Log the received source and destination values
-    // console.log('Received source:', source);
-    // console.log('Received destination:', destination);
-    // Query the database for bus schedules matching the source or destination
     console.log(`Searching for buses from ${source} to ${destination}`);
+    
+    // Query the database for bus schedules matching the source or destination
     const foundBuses = await BusSchedule.find({
-      'route': { $in: [source, destination] }
-      
-    },'vehicleNumber schedule.stations'); 
+      route: { $all: [source, destination] }
+    }, {
+      VehicleNumber: 1, 
+      schedule: 1,
+    });
 
-    // Send the list of found buses as the response
-    res.json({ buses: foundBuses });
-    console.log('Response sent successfully:', { buses: foundBuses });
-    // // Send a success response
-    // res.status(200).json({ message: 'Received source and destination data successfully.' });
+    // Process the found buses to extract vehicle numbers and arrival times
+    const processedBuses = foundBuses.map(bus => {
+      const { 'VehicleNumber': VehicleNumber, schedule } = bus;
+
+      // Extract arrival times for the source location
+      const arrivalTimes = schedule.reduce((times, trip) => {
+        trip.stations.forEach(station => {
+          if (station.station === source) {
+            times.push(station.arrivalTime);
+          }
+        });
+        return times;
+      }, []);
+
+      return {
+        VehicleNumber,
+        arrivalTimes
+      };
+    });
+
+    // Print the final list to the console
+    console.log('Processed buses:', JSON.stringify(processedBuses, null, 2));
+
+    // Send the list of processed buses as the response
+    res.json({ buses: processedBuses });
+
   } catch (error) {
     // If an error occurs, send an error response
     res.status(500).json({ message: error.message });

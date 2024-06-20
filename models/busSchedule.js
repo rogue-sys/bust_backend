@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 // Define the schema for bus schedules
 const busScheduleSchema = new mongoose.Schema({
-  VehicleNumber: { type: String, required: false },
+  VehicleNumber: { type: String, required: true },
   route: [{ type: String, required: true }],
   schedule: [{
     trip: { type: Number, required: true },
@@ -18,7 +18,7 @@ const busScheduleSchema = new mongoose.Schema({
 );
 
 // Create a model using the schema
-const BusSchedule = new mongoose.model('Busschedules', busScheduleSchema);
+const BusSchedule = new mongoose.model('busschedules', busScheduleSchema);
 
 module.exports = BusSchedule;
 
