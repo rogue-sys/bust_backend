@@ -16,7 +16,7 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('login attempt with email;${email}');
+   
     const user = await UserService.loginUser(email, password);
     res.status(200).json(user);
   } catch (error) {
