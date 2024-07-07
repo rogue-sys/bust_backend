@@ -1,5 +1,4 @@
 // db.js
-
 const mongoose = require('mongoose');
 const BusSchedule = require('../models/busSchedule');
 
